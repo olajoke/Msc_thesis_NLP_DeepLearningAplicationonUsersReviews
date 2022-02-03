@@ -17,7 +17,7 @@ def get_count(string):
     return True
   return False
 
-my_file = open("/changeadvisor_Code/reviews/org.geometerplus.zlibrary.ui.android.txt", "r")
+my_file = open("reviews/org.geometerplus.zlibrary.ui.android.txt", "r")# insert the path to the review text data here..
 content = my_file.read()
 content_list = content.split("\n")
 my_file.close()
@@ -27,7 +27,7 @@ content_list = [re.sub(r'[^A-Za-z0-9 .,?]+', "" ,i) for i in content_list if get
 content_list=[i.strip() for i in content_list]
 content_list = list(filter(None, content_list))
 
-content_list= content_list[:]# Specify Number of rows to be used ---->change later
+content_list= content_list[:]# Specify Number of rows to be used 
 
 # loading the bert model
 bert_model = SentenceTransformer('bert-base-uncased')
@@ -41,7 +41,7 @@ input_fast_data,embedding_fast_model= fast_clustering(bert_model,input_list0,con
 ref_dframe=input_fast_data['text'].values
 clusters_number=  50
 graph_embeddings= tensor_2d_dimension_reducer(embedding_fast_model)
-
+input_fast_data.to_csv('fast_input_data.csv')
 create_graph(graph_embeddings,input_fast_data,'Fast_Clustering',clusters_number)
 
 
@@ -53,7 +53,7 @@ input_silhouette_data,embedding_silhouette_model= silhouette_clustering(bert_mod
 
 clusters_number=  50
 graph_embeddings= tensor_2d_dimension_reducer(embedding_silhouette_model)
-
+input_silhouette_data.to_csv('silhouette_input_data.csv')
 create_graph(graph_embeddings,input_silhouette_data,'Silhouette',clusters_number)
 
 #---------------------------------Visualization Kmeans Clustering(elbow method)------------------------------
@@ -65,6 +65,7 @@ input_kmeans_data,embedding_kmeans_model= kmeans_clustering(bert_model,input_lis
 clusters_number=  50
 
 graph_embeddings= tensor_2d_dimension_reducer(embedding_kmeans_model)
+input_kmeans_data.to_csv('kmeans_input_data.csv')
 
 create_graph(graph_embeddings,input_kmeans_data,'K_Means',clusters_number)
 
