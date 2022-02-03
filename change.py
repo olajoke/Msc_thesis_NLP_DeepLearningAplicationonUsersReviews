@@ -24,11 +24,10 @@ import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
 import spacy
 from sklearn.metrics import silhouette_samples, silhouette_score
-from sklearn import metrics
 import re
 
 
-#------------------------Kmeans with elbow ------------------------------------------------------------
+------------------------Kmeans with elbow ------------------------------------------------------------
 
 
 def get_k(embeddings,starting_range = 4,ending_range=15):
@@ -66,7 +65,7 @@ def kmeans_clustering(bert_model, sentence_list,start,end):
 
 
 
-#---------------------------------- Silhouette_Method - -----------------------------------------
+---------------------------------- Silhouette_Method - -----------------------------------------
 
 def silhouette_clustering(bert_model,content_list,start=2,end=20):
 
@@ -97,7 +96,7 @@ def silhouette_clustering(bert_model,content_list,start=2,end=20):
   return silhouette_data, corpus_embeddings
 
 
-#--------------------------------------- Fast Clustering -------------------------------
+--------------------------------------- Fast Clustering -------------------------------
 
 def cluster_detail(clusters):
   clus=[]
@@ -113,12 +112,12 @@ def flat_cluster(clusters):
 
 
 
-def fast_clustering(model_fast,sentences_list,content_list):
+def fast_clustering(model_fast,sentences_list):
 
   corpus_sentences = sentences_list ########## Change No. of Rows here --->TODO: remove later and replace encoded uncased BERT Version
   print("Encoding the corpus...") ####
   fast_embeddings0 = model_fast.encode(corpus_sentences, batch_size=64, show_progress_bar=True, convert_to_tensor=True)
-  clusters = util.community_detection(fast_embeddings0, min_community_size=1, threshold=0.75)
+  clusters = util.community_detection(fast_embeddings0, min_community_size=1, threshold=0.70)
   a=flat_cluster(clusters)
   a2 = [i for i, element in enumerate(content_list) if i not in a]
   unidentified_clusters=[[i] for i in a2]
@@ -148,7 +147,7 @@ def fast_clustering(model_fast,sentences_list,content_list):
   return fast_cluster_dataframe, fast_embeddings2.cpu()
 
 
-#-------------Extractive Summarization---------------------------
+-------------Extractive Summarization---------------------------
 
 def extractive_summarization(input_dataframe):
   input_dataframe=input_dataframe.sample(frac=1)
@@ -161,7 +160,7 @@ def extractive_summarization(input_dataframe):
   return output
 
 
-#---------------------------LDA_Model-----------------------------------
+---------------------------LDA_Model-----------------------------------
 
 def lda_model_2(input_dataframe):
 
@@ -221,15 +220,8 @@ def tensor_2d_dimension_reducer(embeddings):
   graph_2d_embeddings = pca.fit_transform(embeddings)
 
   return graph_2d_embeddings
-# function to create a graph
+
 def create_graph(data_tensor_2d,input_dataframe1,method_name, c_number=10):
-  '''
-  data_tensor_2d: Clustering model Embedding that are reduced to 2_Dimension from higher dimensions
-
-  input_dataframe: Dataframe containing 'text' and 'target' columns after clustering
-
-  c_number: Maximum number of cluster, we want to view (As Fast Clustering model can generate several hundered clusters)
-  '''
   input_dataframe=input_dataframe1.copy()
   X1=data_tensor_2d
 
@@ -255,8 +247,6 @@ def create_graph(data_tensor_2d,input_dataframe1,method_name, c_number=10):
       summary=extractive_summarization(data_set0)
     except:
       try:
-        # topic=extractive_summarization(data_set0)
-        # summary=topic
         topic='No Cluster'
         Summary='No Summary'
       except:
@@ -265,8 +255,6 @@ def create_graph(data_tensor_2d,input_dataframe1,method_name, c_number=10):
     input_dataframe.loc[input_dataframe['target']==c_no ,'Bert_Summary']=summary
     input_dataframe.loc[input_dataframe['target']==c_no ,'Frequency']=frequency
     topic = re.sub(" ",", ",str(topic))
-    #Instructions for building the 2-D plot
-    #trace1 is for 'Clusters'
     trace = go.Scatter(
                         x = data_set0["x_1_component"],
                         y = data_set0["x_2_component"],
@@ -276,20 +264,19 @@ def create_graph(data_tensor_2d,input_dataframe1,method_name, c_number=10):
                         text = None)
     data_e.append(trace)
 
-  #input_dataframe.drop(['x_1_component','x_2_component'])
   input_dataframe=input_dataframe.drop(['x_1_component','x_2_component'],axis=1)
   input_dataframe= input_dataframe.sample(frac = 1)
   input_dataframe.to_csv(method_name +'_Output_dataframe.csv')
 
   title = "Visualizing " +method_name+ " Clusters in Two Dimensions Using PCA"
-
   layout = dict(title = title,
                 xaxis= dict(title= 'PC1',ticklen= 5,zeroline= False),
                 yaxis= dict(title= 'PC2',ticklen= 5,zeroline= False),
                 width=1400, height=900
               )
 
-  fig=go.Figure(data = data_e, layout = layout)
-  fig.show()
-  fig.write_image(method_name+'.png')
+  fig = dict(data = data_e, layout = layout)
+  iplot(fig)
+
+
 
